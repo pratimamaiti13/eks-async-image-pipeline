@@ -1,0 +1,20 @@
+# Day 7-10 TODO: as each manifest is written, add it here.
+#
+# Planned files in this directory:
+#   namespace.yaml              (done)
+#   api-deployment.yaml         - 3 replicas, pod anti-affinity across AZs/nodes
+#   api-service.yaml            - ClusterIP, fronted by ingress
+#   api-hpa.yaml                - HPA on CPU
+#   worker-deployment.yaml      - 2-6 replicas, tolerates worker-node taint
+#   worker-scaledobject.yaml    - KEDA ScaledObject on SQS queue depth
+#   configmap.yaml              - non-secret config (SQS queue URL, region, etc.)
+#   secret.yaml                 - DB credentials (NOT committed - see secret.yaml.example)
+#   ingress.yaml                - ALB Ingress Controller resource
+#   serviceaccount-api.yaml     - IRSA-annotated SA for api-service
+#   serviceaccount-worker.yaml  - IRSA-annotated SA for worker-service
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml

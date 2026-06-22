@@ -1,0 +1,8 @@
+# Day 7-10 TODO: dev-specific patches go here (e.g. lower replica counts for cost,
+# image tags pointing at :dev-latest vs a pinned release tag).
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
