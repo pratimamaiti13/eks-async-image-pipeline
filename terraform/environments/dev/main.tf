@@ -17,12 +17,12 @@ module "vpc" {
   azs          = var.azs
 }
 
-module "ecr" {
-  source = "../../modules/ecr"
+# module "ecr" {
+#   source = "../../modules/ecr"
 
-  project_name = var.project_name
-  repo_names   = ["api-service", "worker-service"]
-}
+#   project_name = var.project_name
+#   repo_names   = ["api-service", "worker-service"]
+# }
 
 module "eks" {
   source = "../../modules/eks"
@@ -35,21 +35,21 @@ module "eks" {
   worker_node_instance_type    = var.worker_node_instance_type
 }
 
-module "rds" {
-  source = "../../modules/rds"
+# module "rds" {
+#   source = "../../modules/rds"
 
-  project_name        = var.project_name
-  db_instance_class   = var.db_instance_class
-  multi_az            = var.db_multi_az
-  db_name             = var.db_name
-  db_username         = var.db_username
-  vpc_id              = module.vpc.vpc_id
-  private_subnet_ids  = module.vpc.private_subnet_ids
-  eks_node_sg_id       = module.eks.node_security_group_id
-}
+#   project_name        = var.project_name
+#   db_instance_class   = var.db_instance_class
+#   multi_az            = var.db_multi_az
+#   db_name             = var.db_name
+#   db_username         = var.db_username
+#   vpc_id              = module.vpc.vpc_id
+#   private_subnet_ids  = module.vpc.private_subnet_ids
+#   eks_node_sg_id       = module.eks.node_security_group_id
+# }
 
-module "sqs" {
-  source = "../../modules/sqs"
+# module "sqs" {
+#   source = "../../modules/sqs"
 
-  project_name = var.project_name
-}
+#   project_name = var.project_name
+# }

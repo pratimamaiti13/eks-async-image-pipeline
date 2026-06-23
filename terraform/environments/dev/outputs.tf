@@ -7,22 +7,22 @@ output "eks_cluster_endpoint" {
   value = module.eks.cluster_endpoint
 }
 
-output "ecr_repository_urls" {
-  description = "Map of service name to ECR repo URL, used when pushing images"
-  value       = module.ecr.repository_urls
-}
+# output "ecr_repository_urls" {
+#   description = "Map of service name to ECR repo URL, used when pushing images"
+#   value       = module.ecr.repository_urls
+# }
 
-output "rds_endpoint" {
-  description = "Postgres connection endpoint - injected into K8s Secret"
-  value       = module.rds.endpoint
-  sensitive   = true
-}
+# output "rds_endpoint" {
+#   description = "Postgres connection endpoint - injected into K8s Secret"
+#   value       = module.rds.endpoint
+#   sensitive   = true
+# }
 
-output "sqs_queue_url" {
-  description = "SQS queue URL - injected into both services' config"
-  value       = module.sqs.queue_url
-}
+# output "sqs_queue_url" {
+#   description = "SQS queue URL - injected into both services' config"
+#   value       = module.sqs.queue_url
+# }
 
-output "sqs_dlq_url" {
-  value = module.sqs.dlq_url
-}
+# output "sqs_dlq_url" {
+#   value = module.sqs.dlq_url
+# }

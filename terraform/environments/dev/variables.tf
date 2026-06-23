@@ -37,7 +37,7 @@ variable "general_node_instance_type" {
 variable "worker_node_instance_type" {
   description = "Instance type for the worker (spot) node group running the image-processing worker"
   type        = string
-  default     = "t3.medium"
+  default     = "t3.small"
 }
 
 variable "db_instance_class" {

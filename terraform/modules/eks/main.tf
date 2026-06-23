@@ -1,50 +1,225 @@
-# Day 1-3 TODO:
-#   - aws_eks_cluster (control plane) in private subnets
-#   - IRSA setup (OIDC provider) - needed Day 7-10 for pod-level AWS permissions
-#   - node group "general": on-demand, var.general_node_instance_type, runs api-service
-#   - node group "worker": SPOT, var.worker_node_instance_type, runs worker-service
-#     (taint this node group e.g. workload=worker:NoSchedule so only worker pods land here,
-#      tolerate it explicitly in the worker Deployment spec)
-#   - Cluster Autoscaler IAM role/policy (Day 11-12 installs the addon itself via k8s/)
+############################################
+# EKS CLUSTER IAM ROLE
+############################################
 
-variable "project_name" {
-  type = string
+resource "aws_iam_role" "eks_cluster_role" {
+  name = "${var.project_name}-eks-cluster-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+
+    Statement = [{
+      Effect = "Allow"
+
+      Principal = {
+        Service = "eks.amazonaws.com"
+      }
+
+      Action = "sts:AssumeRole"
+    }]
+  })
 }
 
-variable "cluster_version" {
-  type = string
+resource "aws_iam_role_policy_attachment" "cluster_policy" {
+  role       = aws_iam_role.eks_cluster_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
 }
 
-variable "vpc_id" {
-  type = string
+############################################
+# NODE IAM ROLE
+############################################
+
+resource "aws_iam_role" "node_role" {
+  name = "${var.project_name}-node-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+
+    Statement = [{
+      Effect = "Allow"
+
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      }
+
+      Action = "sts:AssumeRole"
+    }]
+  })
 }
 
-variable "private_subnet_ids" {
-  type = list(string)
+resource "aws_iam_role_policy_attachment" "worker_node_policy" {
+  role       = aws_iam_role.node_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
 }
 
-variable "general_node_instance_type" {
-  type = string
+resource "aws_iam_role_policy_attachment" "cni_policy" {
+  role       = aws_iam_role.node_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
 }
 
-variable "worker_node_instance_type" {
-  type = string
+resource "aws_iam_role_policy_attachment" "ecr_policy" {
+  role       = aws_iam_role.node_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
-# --- resources go here ---
+############################################
+# EKS CLUSTER
+############################################
 
-output "cluster_name" {
-  value = null # TODO
+resource "aws_eks_cluster" "this" {
+  name     = "${var.project_name}-cluster"
+  role_arn = aws_iam_role.eks_cluster_role.arn
+
+  version = var.cluster_version
+
+  enabled_cluster_log_types = [
+    "api",
+    "audit",
+    "authenticator"
+  ]
+
+  vpc_config {
+    subnet_ids = var.private_subnet_ids
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.cluster_policy
+  ]
 }
 
-output "cluster_endpoint" {
-  value = null # TODO
+############################################
+# GENERAL NODE GROUP
+############################################
+
+resource "aws_eks_node_group" "general" {
+
+  cluster_name    = aws_eks_cluster.this.name
+  node_group_name = "general"
+
+  node_role_arn = aws_iam_role.node_role.arn
+
+  subnet_ids = var.private_subnet_ids
+
+  instance_types = [
+    var.general_node_instance_type
+  ]
+
+  ami_type = "AL2023_x86_64_STANDARD"
+
+  capacity_type = "ON_DEMAND"
+
+  labels = {
+    workload = "general"
+  }
+
+  scaling_config {
+    desired_size = 2
+    min_size     = 2
+    max_size     = 4
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.worker_node_policy,
+    aws_iam_role_policy_attachment.cni_policy,
+    aws_iam_role_policy_attachment.ecr_policy
+  ]
 }
 
-output "node_security_group_id" {
-  value = null # TODO - needed by RDS module for ingress rule
+############################################
+# WORKER NODE GROUP (SPOT)
+############################################
+
+resource "aws_eks_node_group" "worker" {
+
+  cluster_name    = aws_eks_cluster.this.name
+  node_group_name = "worker"
+
+  node_role_arn = aws_iam_role.node_role.arn
+
+  subnet_ids = var.private_subnet_ids
+
+  instance_types = [
+    var.worker_node_instance_type
+  ]
+
+  ami_type = "AL2023_x86_64_STANDARD"
+
+  capacity_type = "SPOT"
+
+  labels = {
+    workload = "worker"
+  }
+
+  taint {
+    key    = "workload"
+    value  = "worker"
+    effect = "NO_SCHEDULE"
+  }
+
+  scaling_config {
+    desired_size = 1
+    min_size     = 1
+    max_size     = 10
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.worker_node_policy,
+    aws_iam_role_policy_attachment.cni_policy,
+    aws_iam_role_policy_attachment.ecr_policy
+  ]
 }
 
-output "oidc_provider_arn" {
-  value = null # TODO - needed for IRSA role trust policies
+############################################
+# EKS MANAGED ADDONS
+############################################
+
+resource "aws_eks_addon" "vpc_cni" {
+  cluster_name = aws_eks_cluster.this.name
+  addon_name   = "vpc-cni"
+
+  depends_on = [
+    aws_eks_node_group.general,
+    aws_eks_node_group.worker
+  ]
+}
+
+resource "aws_eks_addon" "coredns" {
+  cluster_name = aws_eks_cluster.this.name
+  addon_name   = "coredns"
+
+  depends_on = [
+    aws_eks_node_group.general,
+    aws_eks_node_group.worker
+  ]
+}
+
+resource "aws_eks_addon" "kube_proxy" {
+  cluster_name = aws_eks_cluster.this.name
+  addon_name   = "kube-proxy"
+
+  depends_on = [
+    aws_eks_node_group.general,
+    aws_eks_node_group.worker
+  ]
+}
+
+############################################
+# OIDC PROVIDER (IRSA FOUNDATION)
+############################################
+
+data "tls_certificate" "eks" {
+  url = aws_eks_cluster.this.identity[0].oidc[0].issuer
+}
+
+resource "aws_iam_openid_connect_provider" "eks" {
+
+  url = aws_eks_cluster.this.identity[0].oidc[0].issuer
+
+  client_id_list = [
+    "sts.amazonaws.com"
+  ]
+
+  thumbprint_list = [
+    data.tls_certificate.eks.certificates[0].sha1_fingerprint
+  ]
 }
