@@ -1,8 +1,6 @@
 # Async image-processing platform on AWS EKS
 
-A small, honestly-scoped infrastructure project built to get real hands-on experience with
-Terraform, Docker, and Kubernetes — closing a gap between CI/CD pipeline experience and
-general infra/SRE work.
+A small, infrastructure project built with Terraform, Docker, and Kubernetes.
 
 ## What it does
 
