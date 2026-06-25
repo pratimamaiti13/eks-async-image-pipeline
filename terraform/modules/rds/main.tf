@@ -10,46 +10,86 @@
 #   - flip var.multi_az = true via tfvars, terraform apply, observe failover behavior
 #     (this is the HA test - documented as a war story)
 
-variable "project_name" {
-  type = string
+resource "aws_db_subnet_group" "postgres" {
+  name       = "${var.project_name}-db-subnet-group"
+  subnet_ids = var.private_subnet_ids
+
+  tags = {
+    Name = "${var.project_name}-db-subnet-group"
+  }
 }
 
-variable "db_instance_class" {
-  type = string
+resource "aws_security_group" "rds" {
+  name        = "${var.project_name}-rds-sg"
+  description = "Allow Postgres access from EKS nodes"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    description     = "Postgres from EKS"
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [var.eks_node_sg_id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.project_name}-rds-sg"
+  }
 }
 
-variable "multi_az" {
-  type = bool
+resource "random_password" "db" {
+  length  = 20
+  special = false
 }
 
-variable "db_name" {
-  type = string
-}
+# resource "aws_secretsmanager_secret" "rds" {
+#   name = "${var.project_name}-rds-credentials"
+# }
 
-variable "db_username" {
-  type      = string
-  sensitive = true
-}
+# resource "aws_secretsmanager_secret_version" "rds" {
+#   secret_id = aws_secretsmanager_secret.rds.id
 
-variable "vpc_id" {
-  type = string
-}
+#   secret_string = jsonencode({
+#     username = var.db_username
+#     password = random_password.db.result
+#   })
+# }
 
-variable "private_subnet_ids" {
-  type = list(string)
-}
+resource "aws_db_instance" "postgres" {
+  identifier = "${var.project_name}-postgres"
 
-variable "eks_node_sg_id" {
-  type = string
-}
+  engine         = "postgres"
+  engine_version = "18.3"
 
-# --- resources go here ---
+  instance_class = var.db_instance_class
 
-output "endpoint" {
-  value     = null # TODO
-  sensitive = true
-}
+  allocated_storage = 20
+  storage_type      = "gp3"
 
-output "db_name" {
-  value = null # TODO
+  db_name  = var.db_name
+  username = var.db_username
+  password = random_password.db.result
+
+  db_subnet_group_name = aws_db_subnet_group.postgres.name
+
+  vpc_security_group_ids = [
+    aws_security_group.rds.id
+  ]
+
+  multi_az = var.db_multi_az
+
+  publicly_accessible = false
+
+  skip_final_snapshot = true
+
+  tags = {
+    Name = "${var.project_name}-postgres"
+  }
 }

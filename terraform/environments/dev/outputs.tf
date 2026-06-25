@@ -12,11 +12,18 @@ output "eks_cluster_endpoint" {
 #   value       = module.ecr.repository_urls
 # }
 
-# output "rds_endpoint" {
-#   description = "Postgres connection endpoint - injected into K8s Secret"
-#   value       = module.rds.endpoint
-#   sensitive   = true
+output "rds_endpoint" {
+  value = module.rds.rds_endpoint
+}
+
+# output "rds_secret_arn" {
+#   value = module.rds.rds_secret_arn
 # }
+
+output "rds_password" {
+  value     = module.rds.rds_password
+  sensitive = true
+}
 
 # output "sqs_queue_url" {
 #   description = "SQS queue URL - injected into both services' config"
