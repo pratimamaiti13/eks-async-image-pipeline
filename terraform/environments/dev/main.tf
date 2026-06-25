@@ -47,8 +47,8 @@ module "rds" {
   eks_node_sg_id       = module.eks.cluster_security_group_id
 }
 
-# module "sqs" {
-#   source = "../../modules/sqs"
+module "sqs" {
+  source = "../../modules/sqs"
 
-#   project_name = var.project_name
-# }
+  project_name = var.project_name
+}

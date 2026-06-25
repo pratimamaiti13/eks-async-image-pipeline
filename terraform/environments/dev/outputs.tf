@@ -25,11 +25,11 @@ output "rds_password" {
   sensitive = true
 }
 
-# output "sqs_queue_url" {
-#   description = "SQS queue URL - injected into both services' config"
-#   value       = module.sqs.queue_url
-# }
+output "sqs_queue_url" {
+  description = "SQS queue URL - injected into both services' config"
+  value       = module.sqs.queue_url
+}
 
-# output "sqs_dlq_url" {
-#   value = module.sqs.dlq_url
-# }
+output "sqs_dlq_url" {
+  value = module.sqs.dlq_url
+}

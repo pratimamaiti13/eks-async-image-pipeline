@@ -6,20 +6,27 @@
 #     (this matters for Day 13-14: a poison-pill job that always fails should land
 #      in the DLQ, not loop forever - worth deliberately testing as a chaos scenario)
 
-variable "project_name" {
-  type = string
+
+
+resource "aws_sqs_queue" "dlq" {
+  name = "${var.project_name}-jobs-dlq"
+
+  tags = {
+    Name = "${var.project_name}-jobs-dlq"
+  }
 }
 
-# --- resources go here ---
+resource "aws_sqs_queue" "main" {
+  name = "${var.project_name}-jobs"
 
-output "queue_url" {
-  value = null # TODO
-}
+  visibility_timeout_seconds = 60
 
-output "queue_arn" {
-  value = null # TODO - needed for IRSA policy on worker service
-}
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.dlq.arn
+    maxReceiveCount     = 3
+  })
 
-output "dlq_url" {
-  value = null # TODO
+  tags = {
+    Name = "${var.project_name}-jobs"
+  }
 }
