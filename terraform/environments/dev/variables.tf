@@ -64,3 +64,12 @@ variable "db_username" {
   default     = "imgproc_admin"
   sensitive   = true
 }
+
+variable "ecr_repo_names" {
+  type = list(string)
+
+  default = [
+    "api-service",
+    "worker-service"
+  ]
+}

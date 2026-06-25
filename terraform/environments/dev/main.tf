@@ -17,12 +17,11 @@ module "vpc" {
   azs          = var.azs
 }
 
-# module "ecr" {
-#   source = "../../modules/ecr"
-
-#   project_name = var.project_name
-#   repo_names   = ["api-service", "worker-service"]
-# }
+module "ecr" {
+  source = "../../modules/ecr"
+  project_name = var.project_name
+  repo_names   = var.ecr_repo_names
+}
 
 module "eks" {
   source = "../../modules/eks"
