@@ -1,4 +1,3 @@
-# Day 1-3 build order:
 #   1. module.vpc        - public/private subnets, NAT, multi-AZ
 #   2. module.ecr         - container registries for api-service and worker-service
 #   3. module.eks         - cluster + 2 node groups (general on-demand, worker spot)
