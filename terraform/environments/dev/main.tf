@@ -17,7 +17,7 @@ module "vpc" {
 }
 
 module "ecr" {
-  source = "../../modules/ecr"
+  source       = "../../modules/ecr"
   project_name = var.project_name
   repo_names   = var.ecr_repo_names
 }
@@ -25,25 +25,25 @@ module "ecr" {
 module "eks" {
   source = "../../modules/eks"
 
-  project_name                = var.project_name
-  cluster_version              = var.eks_cluster_version
-  vpc_id                       = module.vpc.vpc_id
-  private_subnet_ids           = module.vpc.private_subnet_ids
-  general_node_instance_type   = var.general_node_instance_type
-  worker_node_instance_type    = var.worker_node_instance_type
+  project_name               = var.project_name
+  cluster_version            = var.eks_cluster_version
+  vpc_id                     = module.vpc.vpc_id
+  private_subnet_ids         = module.vpc.private_subnet_ids
+  general_node_instance_type = var.general_node_instance_type
+  worker_node_instance_type  = var.worker_node_instance_type
 }
 
 module "rds" {
   source = "../../modules/rds"
 
-  project_name        = var.project_name
-  db_instance_class   = var.db_instance_class
-  db_multi_az         = var.db_multi_az
-  db_name             = var.db_name
-  db_username         = var.db_username
-  vpc_id              = module.vpc.vpc_id
-  private_subnet_ids  = module.vpc.private_subnet_ids
-  eks_node_sg_id       = module.eks.cluster_security_group_id
+  project_name       = var.project_name
+  db_instance_class  = var.db_instance_class
+  db_multi_az        = var.db_multi_az
+  db_name            = var.db_name
+  db_username        = var.db_username
+  vpc_id             = module.vpc.vpc_id
+  private_subnet_ids = module.vpc.private_subnet_ids
+  eks_node_sg_id     = module.eks.cluster_security_group_id
 }
 
 module "sqs" {
