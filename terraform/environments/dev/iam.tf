@@ -101,7 +101,7 @@ module "api_irsa" {
 
   role_name = "${var.project_name}-api-irsa-role"
 
-  namespace = "default"
+  namespace = "imgproc"
 
   service_account_name = "api-service"
 
@@ -126,7 +126,7 @@ module "worker_irsa" {
 
   role_name = "${var.project_name}-worker-irsa-role"
 
-  namespace = "default"
+  namespace = "imgproc"
 
   service_account_name = "worker-service"
 

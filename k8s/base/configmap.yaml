@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: imgproc-config
+  namespace: imgproc
+
+data:
+  AWS_REGION: ap-south-1
+
+  S3_BUCKET_NAME: imgproc-images-eefbeed5
+
+  SQS_QUEUE_URL: https://sqs.ap-south-1.amazonaws.com/059567099607/imgproc-jobs
+
+  DB_HOST: imgproc-postgres.cxqe6m4qwkya.ap-south-1.rds.amazonaws.com
+
+  DB_PORT: "5432"
+
+  DB_NAME: imgproc
+
+  SQS_QUEUE_NAME: imgproc-jobs
