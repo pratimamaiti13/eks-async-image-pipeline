@@ -23,6 +23,7 @@ data "aws_iam_policy_document" "api" {
     sid = "SQSSend"
 
     actions = [
+      "sqs:GetQueueUrl",
       "sqs:SendMessage"
     ]
 

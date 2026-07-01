@@ -8,7 +8,7 @@ metadata:
 data:
   AWS_REGION: ap-south-1
 
-  S3_BUCKET_NAME: imgproc-images-eefbeed5
+  S3_BUCKET_NAME: imgproc-images-c870e14c
 
   SQS_QUEUE_URL: https://sqs.ap-south-1.amazonaws.com/059567099607/imgproc-jobs
 
