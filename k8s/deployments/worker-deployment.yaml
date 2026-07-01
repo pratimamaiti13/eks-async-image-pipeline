@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: worker-service
+  namespace: imgproc
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: worker-service
+
+  template:
+    metadata:
+      labels:
+        app: worker-service
+
+    spec:
+      serviceAccountName: worker-service
+
+      nodeSelector:
+        workload: worker
+
+      tolerations:
+        - key: workload
+          operator: Equal
+          value: worker
+          effect: NoSchedule
+
+      containers:
+        - name: worker-service
+
+          image: 059567099607.dkr.ecr.ap-south-1.amazonaws.com/imgproc-worker-service:v1
+
+          imagePullPolicy: Always
+
+          envFrom:
+            - configMapRef:
+                name: imgproc-config
+
+            - secretRef:
+                name: imgproc-db-secret
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+          livenessProbe:
+            exec:
+              command:
+                - pgrep
+                - -f
+                - "python -u -m app.worker"
+
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3

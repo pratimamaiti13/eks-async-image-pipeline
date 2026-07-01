@@ -9,8 +9,6 @@ class S3Service:
         self.s3 = boto3.client(
             "s3",
             region_name=settings.aws_region,
-            aws_access_key_id=settings.aws_access_key_id,
-            aws_secret_access_key=settings.aws_secret_access_key,
         )
 
     def upload_file(self, local_path: str, s3_key: str):

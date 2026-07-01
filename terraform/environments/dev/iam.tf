@@ -58,6 +58,7 @@ data "aws_iam_policy_document" "worker" {
     sid = "SQSReceive"
 
     actions = [
+      "sqs:GetQueueUrl",
       "sqs:ReceiveMessage",
       "sqs:DeleteMessage",
       "sqs:GetQueueAttributes"
@@ -90,6 +91,18 @@ resource "aws_iam_policy" "worker" {
   name = "${var.project_name}-worker-policy"
 
   policy = data.aws_iam_policy_document.worker.json
+}
+
+
+############################################
+# AWS LOAD BALANCER CONTROLLER IAM POLICY
+############################################
+
+resource "aws_iam_policy" "alb_controller" {
+
+  name = "AWSLoadBalancerControllerIAMPolicy"
+
+  policy = file("${path.module}/iam_policy.json")
 }
 
 ############################################
@@ -140,4 +153,30 @@ module "worker_irsa" {
   )
 
   policy_arn = aws_iam_policy.worker.arn
+}
+
+
+############################################
+# AWS LOAD BALANCER CONTROLLER IRSA
+############################################
+
+module "aws_load_balancer_controller_irsa" {
+
+  source = "../../modules/irsa"
+
+  role_name = "${var.project_name}-alb-controller-role"
+
+  namespace = "kube-system"
+
+  service_account_name = "aws-load-balancer-controller"
+
+  oidc_provider_arn = module.eks.oidc_provider_arn
+
+  oidc_issuer_without_https = replace(
+    module.eks.oidc_issuer_url,
+    "https://",
+    ""
+  )
+
+  policy_arn = aws_iam_policy.alb_controller.arn
 }
